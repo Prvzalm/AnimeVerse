@@ -1,0 +1,61 @@
+// This file defines the database schema for the application using Prisma.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model to store user information
+model User {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  password       String?
+  name           String?
+  avatar         String?
+  bio            String?
+  watchedAnimes  Anime[]  @relation("WatchedAnimes")
+  likedPosts     Post[]   @relation("LikedPosts")
+  recommendations Recommendation[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Anime model to store anime details
+model Anime {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  imageUrl    String?
+  genre       String?
+  rating      Float?
+  airing      Boolean  @default(false)
+  watchedBy   User[]   @relation("WatchedAnimes")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Post model for community forum posts
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Recommendation model for AI-generated recommendations
+model Recommendation {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  anime     Anime    @relation(fields: [animeId], references: [id])
+  animeId   Int
+  createdAt DateTime @default(now())
+}
