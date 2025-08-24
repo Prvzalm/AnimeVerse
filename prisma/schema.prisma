@@ -9,53 +9,61 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model to store user information
 model User {
-  id             Int      @id @default(autoincrement())
-  email          String   @unique
-  password       String?
-  name           String?
-  avatar         String?
-  bio            String?
-  watchedAnimes  Anime[]  @relation("WatchedAnimes")
-  likedPosts     Post[]   @relation("LikedPosts")
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  bio           String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  posts         Post[]
+  comments      Comment[]
   recommendations Recommendation[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  subscriptions Subscription[]
 }
 
-// Anime model to store anime details
-model Anime {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  imageUrl    String?
-  genre       String?
-  rating      Float?
-  airing      Boolean  @default(false)
-  watchedBy   User[]   @relation("WatchedAnimes")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-// Post model for community forum posts
 model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-  likes     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String    @id @default(cuid())
+  title      String
+  content    String
+  author     User      @relation(fields: [authorId], references: [id])
+  authorId   String
+  likes      Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  comments   Comment[]
+  @@index([authorId])
+  @@index([createdAt])
 }
 
-// Recommendation model for AI-generated recommendations
-model Recommendation {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  anime     Anime    @relation(fields: [animeId], references: [id])
-  animeId   Int
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
   createdAt DateTime @default(now())
+}
+
+model Recommendation {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  input     Json
+  result    Json
+  createdAt DateTime @default(now())
+  @@index([userId, createdAt])
+}
+
+model Subscription {
+  id           String   @id @default(cuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  stripeId     String
+  status       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
